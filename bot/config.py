@@ -13,19 +13,13 @@ load_dotenv(ENV_PATH)
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 ADMIN_CHAT_ID = int(os.getenv("TELEGRAM_CHAT_ID", "0"))
 
-# CLI Backend: claude | codex | qwen
-CLI_BACKEND = os.getenv("CLI_BACKEND", "claude")
+# CLI Backend: claude | gemini | codex
+CLI_BACKEND = os.getenv("CLI_BACKEND", "gemini")
 
 # Backend binaries
 CLAUDE_BIN = os.getenv("CLAUDE_BIN", "claude")
-CODEX_BIN = os.getenv("CODEX_BIN", "codex")
-QWEN_BIN = os.getenv("QWEN_BIN", "qwen")
 GEMINI_BIN = os.getenv("GEMINI_BIN", "gemini")
-
-# Backend-specific API keys
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+CODEX_BIN = os.getenv("CODEX_BIN", "codex")
 
 # Common CLI settings
 CLI_TIMEOUT = int(os.getenv("CLI_TIMEOUT", "600"))
@@ -53,9 +47,8 @@ def get_backend_bin() -> str:
     """Return the binary path for the configured backend."""
     return {
         "claude": CLAUDE_BIN,
-        "codex": CODEX_BIN,
-        "qwen": QWEN_BIN,
         "gemini": GEMINI_BIN,
+        "codex": CODEX_BIN,
     }.get(CLI_BACKEND, "claude")
 
 

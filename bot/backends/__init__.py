@@ -1,16 +1,14 @@
 """Backend factory."""
 
 from backends.base import CLIBackend, CLIResult
-from backends.qwen import QwenBackend
 from backends.claude import ClaudeBackend
 from backends.codex import CodexBackend
 from backends.gemini import GeminiBackend
 
 BACKENDS = {
-    "qwen": QwenBackend,
     "claude": ClaudeBackend,
-    "codex": CodexBackend,
     "gemini": GeminiBackend,
+    "codex": CodexBackend,
 }
 
 

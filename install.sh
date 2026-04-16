@@ -81,19 +81,17 @@ if [[ -z "$CLI_BACKEND" ]]; then
     echo ""
     echo -e "${BOLD}  Which AI assistant do you want to use?${NC}"
     echo ""
-    echo "    1) Claude Code  (Anthropic API key — paid)"
-    echo "    2) Gemini CLI   (Google API key — FREE tier available)"
-    echo "    3) Codex CLI    (OpenAI API key — paid)"
-    echo "    4) Qwen Code    (free via OAuth, 1000 req/day)"
+    echo "    1) Claude Code  (Anthropic — API key or OAuth)"
+    echo "    2) Gemini CLI   (Google — FREE, just API key)"
+    echo "    3) Codex CLI    (OpenAI — login from phone, no key needed)"
     echo ""
     while true; do
-        read -p "  Your choice [1-4]: " backend_choice
+        read -p "  Your choice [1-3]: " backend_choice
         case $backend_choice in
             1) CLI_BACKEND="claude"; break ;;
             2) CLI_BACKEND="gemini"; break ;;
             3) CLI_BACKEND="codex"; break ;;
-            4) CLI_BACKEND="qwen"; break ;;
-            *) warn "Enter 1, 2, 3, or 4" ;;
+            *) warn "Enter 1, 2, or 3" ;;
         esac
     done
 fi
@@ -102,8 +100,7 @@ case $CLI_BACKEND in
     claude) info "Backend: Claude Code" ;;
     gemini) info "Backend: Gemini CLI" ;;
     codex)  info "Backend: Codex CLI" ;;
-    qwen)   info "Backend: Qwen Code" ;;
-    *)      fail "Unknown backend: $CLI_BACKEND. Use: claude, gemini, codex, qwen" ;;
+    *)      fail "Unknown backend: $CLI_BACKEND. Use: claude, gemini, codex" ;;
 esac
 
 
@@ -180,11 +177,15 @@ case $CLI_BACKEND in
         info "Claude Code CLI ready"
 
         echo ""
-        echo "  Anthropic API key required."
-        echo "  Get it at: https://console.anthropic.com/settings/keys"
+        echo "  How do you want to authenticate?"
+        echo "    a) API key (from console.anthropic.com)"
+        echo "    b) I'll set it up later"
         echo ""
-        read -p "  Anthropic API key: " ANTHROPIC_KEY
-        BACKEND_SPECIFIC_VARS="ANTHROPIC_API_KEY=$ANTHROPIC_KEY"
+        read -p "  Choice [a/b]: " claude_auth
+        if [[ "$claude_auth" == "a" || "$claude_auth" == "A" ]]; then
+            read -p "  Anthropic API key: " ANTHROPIC_KEY
+            BACKEND_SPECIFIC_VARS="ANTHROPIC_API_KEY=$ANTHROPIC_KEY"
+        fi
         ;;
 
     gemini)
@@ -199,7 +200,7 @@ case $CLI_BACKEND in
         info "Gemini CLI ready"
 
         echo ""
-        echo "  Google AI API key required (FREE tier available)."
+        echo "  Google AI API key (FREE, no credit card)."
         echo "  Get it at: https://aistudio.google.com/apikey"
         echo ""
         read -p "  Gemini API key: " GEMINI_KEY
@@ -218,23 +219,17 @@ case $CLI_BACKEND in
         info "Codex CLI ready"
 
         echo ""
-        echo "  OpenAI API key required."
-        echo "  Get it at: https://platform.openai.com/api-keys"
+        echo "  How do you want to authenticate?"
+        echo "    a) Login from phone (easiest — no API key needed)"
+        echo "    b) API key (from platform.openai.com)"
+        echo "    c) I'll set it up later"
         echo ""
-        read -p "  OpenAI API key: " OPENAI_KEY
-        BACKEND_SPECIFIC_VARS="OPENAI_API_KEY=$OPENAI_KEY"
-        ;;
-
-    qwen)
-        if ! command -v qwen &>/dev/null; then
-            info "Installing Qwen Code CLI..."
-            npm install -g @qwen-code/qwen-code@latest 2>&1 | tail -3 || fail "Failed to install Qwen Code"
-            if ! command -v qwen &>/dev/null; then
-                NPM_BIN=$(npm config get prefix)/bin
-                [[ -f "$NPM_BIN/qwen" ]] && ln -sf "$NPM_BIN/qwen" /usr/local/bin/qwen
-            fi
+        read -p "  Choice [a/b/c]: " codex_auth
+        if [[ "$codex_auth" == "b" || "$codex_auth" == "B" ]]; then
+            read -p "  OpenAI API key: " OPENAI_KEY
+            BACKEND_SPECIFIC_VARS="OPENAI_API_KEY=$OPENAI_KEY"
         fi
-        info "Qwen Code CLI ready"
+        # Device auth happens in Step 11
         ;;
 esac
 
@@ -363,7 +358,6 @@ IDENTITY_SRC="$INSTALL_DIR/workspace/IDENTITY.md"
 case $CLI_BACKEND in
     claude) cp "$IDENTITY_SRC" "$INSTALL_DIR/workspace/CLAUDE.md" 2>/dev/null ;;
     gemini) cp "$IDENTITY_SRC" "$INSTALL_DIR/workspace/GEMINI.md" 2>/dev/null ;;
-    qwen)   cp "$IDENTITY_SRC" "$INSTALL_DIR/workspace/QWEN.md" 2>/dev/null ;;
 esac
 
 
@@ -380,43 +374,50 @@ info "Permissions configured"
 #  Step 11: Backend-specific auth
 # ============================================================
 case $CLI_BACKEND in
-    qwen)
-        echo ""
-        echo -e "${BOLD}======================================${NC}"
-        echo -e "${BOLD}    Qwen Code Authorization${NC}"
-        echo -e "${BOLD}======================================${NC}"
-        echo ""
-        echo "  A link will appear — open it in your browser."
-        echo "  If it hangs >2 min — press Ctrl+C."
-        echo ""
-        read -p "  Press Enter to start..."
-
-        _run_qwen_auth() {
-            sudo -u cliclaw HOME="$INSTALL_DIR" BROWSER=echo \
-                PATH="/usr/local/bin:/usr/bin:/bin:$PATH" \
-                timeout 120 qwen auth qwen-oauth
-        }
-
-        echo ""
-        _run_qwen_auth || true
-
-        echo ""
-        read -p "  Authorization OK? (y/Enter to retry): " auth_ok
-        if [[ "$auth_ok" != "y" && "$auth_ok" != "Y" ]]; then
-            _run_qwen_auth || true
+    claude)
+        if [[ -z "$ANTHROPIC_KEY" ]]; then
+            warn "No API key set. Add ANTHROPIC_API_KEY to $INSTALL_DIR/.env later"
+        else
+            info "Claude Code: API key configured"
         fi
         ;;
 
-    claude)
-        info "Claude Code uses ANTHROPIC_API_KEY from .env — no auth needed"
-        ;;
-
     gemini)
-        info "Gemini CLI uses GEMINI_API_KEY from .env — no auth needed"
+        if [[ -z "$GEMINI_KEY" ]]; then
+            warn "No API key set. Add GEMINI_API_KEY to $INSTALL_DIR/.env later"
+        else
+            info "Gemini CLI: API key configured"
+        fi
         ;;
 
     codex)
-        info "Codex CLI uses OPENAI_API_KEY from .env — no auth needed"
+        if [[ "$codex_auth" == "a" || "$codex_auth" == "A" ]]; then
+            echo ""
+            echo -e "${BOLD}======================================${NC}"
+            echo -e "${BOLD}    Codex Login (from your phone)${NC}"
+            echo -e "${BOLD}======================================${NC}"
+            echo ""
+            echo "  A code and a link will appear below."
+            echo "  Open the link on your phone, enter the code."
+            echo "  That's it — no API key needed."
+            echo ""
+            read -p "  Press Enter to start..."
+
+            echo ""
+            sudo -u cliclaw HOME="$INSTALL_DIR" \
+                PATH="/usr/local/bin:/usr/bin:/bin:$PATH" \
+                timeout 120 codex login --device-auth || true
+
+            echo ""
+            read -p "  Login OK? (y/n): " codex_login_ok
+            if [[ "$codex_login_ok" != "y" && "$codex_login_ok" != "Y" ]]; then
+                warn "You can login later: sudo -u cliclaw codex login --device-auth"
+            fi
+        elif [[ -z "$OPENAI_KEY" ]]; then
+            warn "No API key set. Add OPENAI_API_KEY to $INSTALL_DIR/.env later"
+        else
+            info "Codex CLI: API key configured"
+        fi
         ;;
 esac
 
