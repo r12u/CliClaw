@@ -1,6 +1,6 @@
 # CliClaw
 
-Universal AI assistant in Telegram. Choose your backend: **Claude Code**, **Codex CLI**, or **Qwen Code**.
+Universal AI assistant in Telegram. Choose your backend: **Claude Code**, **Gemini CLI**, **Codex CLI**, or **Qwen Code**.
 
 ## Features
 
@@ -29,6 +29,7 @@ sudo bash /tmp/install.sh --backend=claude
 | Backend | Auth | Cost |
 |---|---|---|
 | Claude Code | `ANTHROPIC_API_KEY` | Paid (Anthropic API) |
+| Gemini CLI | `GEMINI_API_KEY` | **Free** tier (10-50 RPM) |
 | Codex CLI | `OPENAI_API_KEY` | Paid (OpenAI API) |
 | Qwen Code | OAuth (browser) | Free (1000 req/day) |
 

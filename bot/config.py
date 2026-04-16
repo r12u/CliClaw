@@ -20,10 +20,12 @@ CLI_BACKEND = os.getenv("CLI_BACKEND", "claude")
 CLAUDE_BIN = os.getenv("CLAUDE_BIN", "claude")
 CODEX_BIN = os.getenv("CODEX_BIN", "codex")
 QWEN_BIN = os.getenv("QWEN_BIN", "qwen")
+GEMINI_BIN = os.getenv("GEMINI_BIN", "gemini")
 
 # Backend-specific API keys
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 # Common CLI settings
 CLI_TIMEOUT = int(os.getenv("CLI_TIMEOUT", "600"))
@@ -53,6 +55,7 @@ def get_backend_bin() -> str:
         "claude": CLAUDE_BIN,
         "codex": CODEX_BIN,
         "qwen": QWEN_BIN,
+        "gemini": GEMINI_BIN,
     }.get(CLI_BACKEND, "claude")
 
 

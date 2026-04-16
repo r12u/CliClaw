@@ -81,26 +81,29 @@ if [[ -z "$CLI_BACKEND" ]]; then
     echo ""
     echo -e "${BOLD}  Which AI assistant do you want to use?${NC}"
     echo ""
-    echo "    1) Claude Code  (Anthropic API key required — paid)"
-    echo "    2) Codex CLI    (OpenAI API key required — paid)"
-    echo "    3) Qwen Code    (free via OAuth, 1000 req/day)"
+    echo "    1) Claude Code  (Anthropic API key — paid)"
+    echo "    2) Gemini CLI   (Google API key — FREE tier available)"
+    echo "    3) Codex CLI    (OpenAI API key — paid)"
+    echo "    4) Qwen Code    (free via OAuth, 1000 req/day)"
     echo ""
     while true; do
-        read -p "  Your choice [1-3]: " backend_choice
+        read -p "  Your choice [1-4]: " backend_choice
         case $backend_choice in
             1) CLI_BACKEND="claude"; break ;;
-            2) CLI_BACKEND="codex"; break ;;
-            3) CLI_BACKEND="qwen"; break ;;
-            *) warn "Enter 1, 2, or 3" ;;
+            2) CLI_BACKEND="gemini"; break ;;
+            3) CLI_BACKEND="codex"; break ;;
+            4) CLI_BACKEND="qwen"; break ;;
+            *) warn "Enter 1, 2, 3, or 4" ;;
         esac
     done
 fi
 
 case $CLI_BACKEND in
     claude) info "Backend: Claude Code" ;;
+    gemini) info "Backend: Gemini CLI" ;;
     codex)  info "Backend: Codex CLI" ;;
     qwen)   info "Backend: Qwen Code" ;;
-    *)      fail "Unknown backend: $CLI_BACKEND. Use: claude, codex, qwen" ;;
+    *)      fail "Unknown backend: $CLI_BACKEND. Use: claude, gemini, codex, qwen" ;;
 esac
 
 
@@ -182,6 +185,25 @@ case $CLI_BACKEND in
         echo ""
         read -p "  Anthropic API key: " ANTHROPIC_KEY
         BACKEND_SPECIFIC_VARS="ANTHROPIC_API_KEY=$ANTHROPIC_KEY"
+        ;;
+
+    gemini)
+        if ! command -v gemini &>/dev/null; then
+            info "Installing Gemini CLI..."
+            npm install -g @google/gemini-cli@latest 2>&1 | tail -3 || fail "Failed to install Gemini CLI"
+            if ! command -v gemini &>/dev/null; then
+                NPM_BIN=$(npm config get prefix)/bin
+                [[ -f "$NPM_BIN/gemini" ]] && ln -sf "$NPM_BIN/gemini" /usr/local/bin/gemini
+            fi
+        fi
+        info "Gemini CLI ready"
+
+        echo ""
+        echo "  Google AI API key required (FREE tier available)."
+        echo "  Get it at: https://aistudio.google.com/apikey"
+        echo ""
+        read -p "  Gemini API key: " GEMINI_KEY
+        BACKEND_SPECIFIC_VARS="GEMINI_API_KEY=$GEMINI_KEY"
         ;;
 
     codex)
@@ -340,6 +362,7 @@ fi
 IDENTITY_SRC="$INSTALL_DIR/workspace/IDENTITY.md"
 case $CLI_BACKEND in
     claude) cp "$IDENTITY_SRC" "$INSTALL_DIR/workspace/CLAUDE.md" 2>/dev/null ;;
+    gemini) cp "$IDENTITY_SRC" "$INSTALL_DIR/workspace/GEMINI.md" 2>/dev/null ;;
     qwen)   cp "$IDENTITY_SRC" "$INSTALL_DIR/workspace/QWEN.md" 2>/dev/null ;;
 esac
 
@@ -386,6 +409,10 @@ case $CLI_BACKEND in
 
     claude)
         info "Claude Code uses ANTHROPIC_API_KEY from .env — no auth needed"
+        ;;
+
+    gemini)
+        info "Gemini CLI uses GEMINI_API_KEY from .env — no auth needed"
         ;;
 
     codex)
