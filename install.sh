@@ -350,24 +350,48 @@ _run_auth() {
             echo -e "${BOLD}    Claude Code Authorization${NC}"
             echo -e "${BOLD}======================================${NC}"
             echo ""
-            echo "  A link will appear — open it in your browser."
-            echo "  Log in with your Anthropic account (Max plan)."
-            echo "  Click 'Authorize' and come back."
+            echo "  How to authenticate?"
+            echo "    a) API key (easiest — paste key from console.anthropic.com)"
+            echo "    b) OAuth login (Max subscription — interactive terminal)"
+            echo "    c) Skip (set up later)"
             echo ""
-            read -p "  Press Enter to start..."
+            read -p "  Choice [a/b/c]: " claude_auth
 
-            echo ""
-            sudo -u cliclaw HOME="$INSTALL_DIR" BROWSER=echo \
-                PATH="/usr/local/bin:/usr/bin:/bin:$PATH" \
-                timeout 120 claude /login || true
-
-            echo ""
-            read -p "  Authorization OK? (y/n): " claude_ok
-            if [[ "$claude_ok" != "y" && "$claude_ok" != "Y" ]]; then
-                warn "Login later: sudo -u cliclaw claude /login"
-            else
-                info "Claude Code: authorized"
-            fi
+            case $claude_auth in
+                a|A)
+                    echo ""
+                    echo "  Get your key at: https://console.anthropic.com/settings/keys"
+                    echo ""
+                    read -p "  Anthropic API key: " ANTHROPIC_KEY
+                    if [[ -n "$ANTHROPIC_KEY" ]]; then
+                        # Add to .env
+                        echo "ANTHROPIC_API_KEY=$ANTHROPIC_KEY" >> "$INSTALL_DIR/.env"
+                        chmod 600 "$INSTALL_DIR/.env"
+                        info "Claude Code: API key saved"
+                    fi
+                    ;;
+                b|B)
+                    echo ""
+                    echo "  Claude Code will open in terminal."
+                    echo "  Follow the prompts to authorize."
+                    echo ""
+                    read -p "  Press Enter to start..."
+                    echo ""
+                    sudo -u cliclaw HOME="$INSTALL_DIR" BROWSER=echo \
+                        PATH="/usr/local/bin:/usr/bin:/bin:$PATH" \
+                        timeout 120 claude /login || true
+                    echo ""
+                    read -p "  Authorization OK? (y/n): " claude_ok
+                    if [[ "$claude_ok" != "y" && "$claude_ok" != "Y" ]]; then
+                        warn "Login later: sudo -u cliclaw claude /login"
+                    else
+                        info "Claude Code: authorized"
+                    fi
+                    ;;
+                *)
+                    warn "Set up later: add ANTHROPIC_API_KEY to $INSTALL_DIR/.env"
+                    ;;
+            esac
             ;;
 
         codex)
