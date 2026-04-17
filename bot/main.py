@@ -73,12 +73,12 @@ def is_admin_cb(callback: CallbackQuery) -> bool:
 def build_main_menu() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="\ud83d\udccb \u0421\u0435\u0441\u0441\u0438\u0438", callback_data="sessions:0"),
-            InlineKeyboardButton(text="\u2795 \u041d\u043e\u0432\u0430\u044f", callback_data="new_session"),
+            InlineKeyboardButton(text="📋 \u0421\u0435\u0441\u0441\u0438\u0438", callback_data="sessions:0"),
+            InlineKeyboardButton(text="➕ \u041d\u043e\u0432\u0430\u044f", callback_data="new_session"),
         ],
         [
-            InlineKeyboardButton(text="\ud83d\udcca \u0421\u0442\u0430\u0442\u0443\u0441", callback_data="status"),
-            InlineKeyboardButton(text="\ud83d\uddd1 \u0417\u0430\u043a\u0440\u044b\u0442\u044c \u0432\u0441\u0435", callback_data="close_all"),
+            InlineKeyboardButton(text="📊 \u0421\u0442\u0430\u0442\u0443\u0441", callback_data="status"),
+            InlineKeyboardButton(text="🗑 \u0417\u0430\u043a\u0440\u044b\u0442\u044c \u0432\u0441\u0435", callback_data="close_all"),
         ],
     ])
 
@@ -91,8 +91,8 @@ def build_sessions_keyboard(sessions: list[dict], page: int = 0, focus_id: str =
 
     buttons = []
     for s in page_sessions:
-        icon = {"active": "\u26a1", "idle": "\ud83d\udca4"}.get(s["status"], "\u2753")
-        marker = "\ud83d\udc49 " if s["session_id"] == focus_id else ""
+        icon = {"active": "⚡", "idle": "💤"}.get(s["status"], "❓")
+        marker = "👉 " if s["session_id"] == focus_id else ""
         name = s["name"][:28] + ".." if len(s["name"]) > 28 else s["name"]
 
         buttons.append([
@@ -100,18 +100,18 @@ def build_sessions_keyboard(sessions: list[dict], page: int = 0, focus_id: str =
                 text=f"{marker}{icon} {name}",
                 callback_data=f'switch:{s["session_id"]}',
             ),
-            InlineKeyboardButton(text="\u274c", callback_data=f'close:{s["session_id"]}'),
+            InlineKeyboardButton(text="❌", callback_data=f'close:{s["session_id"]}'),
         ])
 
     nav = []
     if page > 0:
-        nav.append(InlineKeyboardButton(text="\u2b05 \u041d\u0430\u0437\u0430\u0434", callback_data=f"sessions:{page - 1}"))
+        nav.append(InlineKeyboardButton(text="⬅ \u041d\u0430\u0437\u0430\u0434", callback_data=f"sessions:{page - 1}"))
     if end < total:
-        nav.append(InlineKeyboardButton(text="\u0412\u043f\u0435\u0440\u0451\u0434 \u27a1", callback_data=f"sessions:{page + 1}"))
+        nav.append(InlineKeyboardButton(text="\u0412\u043f\u0435\u0440\u0451\u0434 ➡", callback_data=f"sessions:{page + 1}"))
     if nav:
         buttons.append(nav)
 
-    buttons.append([InlineKeyboardButton(text="\ud83c\udfe0 \u041c\u0435\u043d\u044e", callback_data="menu")])
+    buttons.append([InlineKeyboardButton(text="🏠 \u041c\u0435\u043d\u044e", callback_data="menu")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
@@ -158,13 +158,13 @@ async def cmd_start(message: Message):
 
     backend = get_backend()
     backend_name = backend.display_name if backend else "not configured"
-    voice_status = "\u2705 Groq" if config.GROQ_API_KEY else "\u274c /setup"
+    voice_status = "✅ Groq" if config.GROQ_API_KEY else "❌ /setup"
 
     await message.reply(
-        f"\ud83e\udd16 <b>CliClaw</b> \u2014 \u0442\u0432\u043e\u0439 AI-\u0430\u0441\u0441\u0438\u0441\u0442\u0435\u043d\u0442\n\n"
-        f"\ud83d\udd27 \u0411\u044d\u043a\u0435\u043d\u0434: {backend_name}\n"
-        f"\ud83c\udf99 \u0413\u043e\u043b\u043e\u0441\u043e\u0432\u044b\u0435: {voice_status}\n"
-        f"\ud83e\udde0 \u041f\u0430\u043c\u044f\u0442\u044c: {'on' if config.MEMORY_ENABLED else 'off'}\n\n"
+        f"🤖 <b>CliClaw</b> \u2014 \u0442\u0432\u043e\u0439 AI-\u0430\u0441\u0441\u0438\u0441\u0442\u0435\u043d\u0442\n\n"
+        f"🔧 \u0411\u044d\u043a\u0435\u043d\u0434: {backend_name}\n"
+        f"🎙 \u0413\u043e\u043b\u043e\u0441\u043e\u0432\u044b\u0435: {voice_status}\n"
+        f"🧠 \u041f\u0430\u043c\u044f\u0442\u044c: {'on' if config.MEMORY_ENABLED else 'off'}\n\n"
         f"\u041f\u0440\u043e\u0441\u0442\u043e \u043d\u0430\u043f\u0438\u0448\u0438 \u043c\u043d\u0435.",
         parse_mode=ParseMode.HTML,
         reply_markup=build_main_menu(),
@@ -176,7 +176,7 @@ async def cmd_menu(message: Message):
     if not is_admin(message):
         return
     await message.reply(
-        "\ud83c\udfae <b>\u041f\u0430\u043d\u0435\u043b\u044c \u0443\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u044f</b>",
+        "🎮 <b>\u041f\u0430\u043d\u0435\u043b\u044c \u0443\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u044f</b>",
         parse_mode=ParseMode.HTML,
         reply_markup=build_main_menu(),
     )
@@ -190,7 +190,7 @@ async def cmd_new(message: Message):
     await message.reply(
         "\u041e\u0442\u043f\u0440\u0430\u0432\u044c \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u2014 \u043e\u043d\u043e \u0441\u0442\u0430\u043d\u0435\u0442 \u043d\u0430\u0447\u0430\u043b\u043e\u043c \u043d\u043e\u0432\u043e\u0439 \u0441\u0435\u0441\u0441\u0438\u0438.",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="\u274c \u041e\u0442\u043c\u0435\u043d\u0430", callback_data="cancel_new")],
+            [InlineKeyboardButton(text="❌ \u041e\u0442\u043c\u0435\u043d\u0430", callback_data="cancel_new")],
         ]),
     )
 
@@ -204,8 +204,8 @@ async def cmd_sessions(message: Message):
         await message.reply(
             "\u041d\u0435\u0442 \u0430\u043a\u0442\u0438\u0432\u043d\u044b\u0445 \u0441\u0435\u0441\u0441\u0438\u0439.",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="\u2795 \u041d\u043e\u0432\u0430\u044f", callback_data="new_session")],
-                [InlineKeyboardButton(text="\ud83c\udfe0 \u041c\u0435\u043d\u044e", callback_data="menu")],
+                [InlineKeyboardButton(text="➕ \u041d\u043e\u0432\u0430\u044f", callback_data="new_session")],
+                [InlineKeyboardButton(text="🏠 \u041c\u0435\u043d\u044e", callback_data="menu")],
             ]),
         )
         return
@@ -230,7 +230,7 @@ async def cmd_update(message: Message):
     if not is_admin(message):
         return
 
-    status_msg = await message.reply("\ud83d\udd04 \u041f\u0440\u043e\u0432\u0435\u0440\u044f\u044e \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u044f...")
+    status_msg = await message.reply("🔄 \u041f\u0440\u043e\u0432\u0435\u0440\u044f\u044e \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u044f...")
 
     try:
         proc = await asyncio.create_subprocess_exec(
@@ -249,7 +249,7 @@ async def cmd_update(message: Message):
         behind = int(stdout.decode().strip() or "0")
 
         if behind == 0:
-            await status_msg.edit_text("\u2705 \u0423\u0436\u0435 \u0430\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u0430\u044f \u0432\u0435\u0440\u0441\u0438\u044f.")
+            await status_msg.edit_text("✅ \u0423\u0436\u0435 \u0430\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u0430\u044f \u0432\u0435\u0440\u0441\u0438\u044f.")
             return
 
         await status_msg.edit_text(f"\u2b07 \u041d\u0430\u0439\u0434\u0435\u043d\u043e {behind} \u043a\u043e\u043c\u043c\u0438\u0442(\u043e\u0432). \u041e\u0431\u043d\u043e\u0432\u043b\u044f\u044e...")
@@ -263,7 +263,7 @@ async def cmd_update(message: Message):
 
         if proc.returncode != 0:
             error = stderr.decode()[:500]
-            await status_msg.edit_text(f"\u274c \u041e\u0448\u0438\u0431\u043a\u0430:\n<pre>{error}</pre>", parse_mode=ParseMode.HTML)
+            await status_msg.edit_text(f"❌ \u041e\u0448\u0438\u0431\u043a\u0430:\n<pre>{error}</pre>", parse_mode=ParseMode.HTML)
             return
 
         proc = await asyncio.create_subprocess_exec(
@@ -273,7 +273,7 @@ async def cmd_update(message: Message):
         )
         await proc.communicate()
 
-        await status_msg.edit_text(f"\u2705 \u041e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u043e ({behind} \u043a\u043e\u043c\u043c\u0438\u0442\u043e\u0432). \u041f\u0435\u0440\u0435\u0437\u0430\u043f\u0443\u0441\u043a...")
+        await status_msg.edit_text(f"✅ \u041e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u043e ({behind} \u043a\u043e\u043c\u043c\u0438\u0442\u043e\u0432). \u041f\u0435\u0440\u0435\u0437\u0430\u043f\u0443\u0441\u043a...")
 
         proc = await asyncio.create_subprocess_exec(
             "sudo", "systemctl", "restart", SERVICE_NAME,
@@ -284,7 +284,7 @@ async def cmd_update(message: Message):
     except Exception as e:
         logger.error(f"Update failed: {e}", exc_info=True)
         try:
-            await status_msg.edit_text(f"\u274c \u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u044f: {e}")
+            await status_msg.edit_text(f"❌ \u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u044f: {e}")
         except Exception:
             pass
 
@@ -296,18 +296,18 @@ async def cmd_setup(message: Message):
 
     buttons = []
     if not config.GROQ_API_KEY:
-        buttons.append([InlineKeyboardButton(text="\ud83c\udf99 \u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c Groq \u043a\u043b\u044e\u0447 (\u0433\u043e\u043b\u043e\u0441)", callback_data="setup:groq")])
+        buttons.append([InlineKeyboardButton(text="🎙 \u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c Groq \u043a\u043b\u044e\u0447 (\u0433\u043e\u043b\u043e\u0441)", callback_data="setup:groq")])
     else:
-        buttons.append([InlineKeyboardButton(text="\ud83d\udd04 \u041e\u0431\u043d\u043e\u0432\u0438\u0442\u044c Groq \u043a\u043b\u044e\u0447", callback_data="setup:groq")])
+        buttons.append([InlineKeyboardButton(text="🔄 \u041e\u0431\u043d\u043e\u0432\u0438\u0442\u044c Groq \u043a\u043b\u044e\u0447", callback_data="setup:groq")])
 
-    buttons.append([InlineKeyboardButton(text="\ud83c\udfe0 \u041c\u0435\u043d\u044e", callback_data="menu")])
+    buttons.append([InlineKeyboardButton(text="🏠 \u041c\u0435\u043d\u044e", callback_data="menu")])
 
     backend = get_backend()
-    voice_status = "\u2705" if config.GROQ_API_KEY else "\u274c"
+    voice_status = "✅" if config.GROQ_API_KEY else "❌"
     await message.reply(
-        f"\u2699\ufe0f <b>\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438</b>\n\n"
-        f"\ud83d\udd27 \u0411\u044d\u043a\u0435\u043d\u0434: {backend.display_name if backend else '?'}\n"
-        f"\ud83c\udf99 \u0413\u043e\u043b\u043e\u0441\u043e\u0432\u044b\u0435: {voice_status}",
+        f"⚙️ <b>\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438</b>\n\n"
+        f"🔧 \u0411\u044d\u043a\u0435\u043d\u0434: {backend.display_name if backend else '?'}\n"
+        f"🎙 \u0413\u043e\u043b\u043e\u0441\u043e\u0432\u044b\u0435: {voice_status}",
         parse_mode=ParseMode.HTML,
         reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons),
     )
@@ -326,7 +326,7 @@ async def cb_setup_groq(callback: CallbackQuery):
         "\u041a\u043b\u044e\u0447 \u0432\u044b\u0433\u043b\u044f\u0434\u0438\u0442 \u0442\u0430\u043a: <code>gsk_...</code>",
         parse_mode=ParseMode.HTML,
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="\u274c \u041e\u0442\u043c\u0435\u043d\u0430", callback_data="setup:cancel")],
+            [InlineKeyboardButton(text="❌ \u041e\u0442\u043c\u0435\u043d\u0430", callback_data="setup:cancel")],
         ]),
     )
     await callback.answer()
@@ -348,7 +348,7 @@ async def cb_menu(callback: CallbackQuery):
     if not is_admin_cb(callback):
         return
     await callback.message.edit_text(
-        "\ud83c\udfae <b>\u041f\u0430\u043d\u0435\u043b\u044c \u0443\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u044f</b>",
+        "🎮 <b>\u041f\u0430\u043d\u0435\u043b\u044c \u0443\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u044f</b>",
         parse_mode=ParseMode.HTML,
         reply_markup=build_main_menu(),
     )
@@ -366,8 +366,8 @@ async def cb_sessions(callback: CallbackQuery):
         await callback.message.edit_text(
             "\u041d\u0435\u0442 \u0430\u043a\u0442\u0438\u0432\u043d\u044b\u0445 \u0441\u0435\u0441\u0441\u0438\u0439.",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="\u2795 \u041d\u043e\u0432\u0430\u044f", callback_data="new_session")],
-                [InlineKeyboardButton(text="\ud83c\udfe0 \u041c\u0435\u043d\u044e", callback_data="menu")],
+                [InlineKeyboardButton(text="➕ \u041d\u043e\u0432\u0430\u044f", callback_data="new_session")],
+                [InlineKeyboardButton(text="🏠 \u041c\u0435\u043d\u044e", callback_data="menu")],
             ]),
         )
         await callback.answer()
@@ -404,8 +404,8 @@ async def cb_switch(callback: CallbackQuery):
         f"\u041f\u0435\u0440\u0435\u043a\u043b\u044e\u0447\u0435\u043d\u043e. \u041e\u0442\u043f\u0440\u0430\u0432\u044c \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435.",
         parse_mode=ParseMode.HTML,
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="\ud83d\udccb \u0421\u0435\u0441\u0441\u0438\u0438", callback_data="sessions:0")],
-            [InlineKeyboardButton(text="\ud83c\udfe0 \u041c\u0435\u043d\u044e", callback_data="menu")],
+            [InlineKeyboardButton(text="📋 \u0421\u0435\u0441\u0441\u0438\u0438", callback_data="sessions:0")],
+            [InlineKeyboardButton(text="🏠 \u041c\u0435\u043d\u044e", callback_data="menu")],
         ]),
     )
     await callback.answer(f"\u0421\u0435\u0441\u0441\u0438\u044f: {session['name'][:30]}")
@@ -440,8 +440,8 @@ async def cb_close(callback: CallbackQuery):
         await callback.message.edit_text(
             f"\u0417\u0430\u043a\u0440\u044b\u0442\u043e: {session['name']}\n\u041d\u0435\u0442 \u0430\u043a\u0442\u0438\u0432\u043d\u044b\u0445 \u0441\u0435\u0441\u0441\u0438\u0439.",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="\u2795 \u041d\u043e\u0432\u0430\u044f", callback_data="new_session")],
-                [InlineKeyboardButton(text="\ud83c\udfe0 \u041c\u0435\u043d\u044e", callback_data="menu")],
+                [InlineKeyboardButton(text="➕ \u041d\u043e\u0432\u0430\u044f", callback_data="new_session")],
+                [InlineKeyboardButton(text="🏠 \u041c\u0435\u043d\u044e", callback_data="menu")],
             ]),
         )
 
@@ -454,7 +454,7 @@ async def cb_new_session(callback: CallbackQuery):
     await callback.message.edit_text(
         "\u041e\u0442\u043f\u0440\u0430\u0432\u044c \u043f\u0435\u0440\u0432\u043e\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u2014 \u043e\u043d\u043e \u0441\u0442\u0430\u043d\u0435\u0442 \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0435\u043c \u0441\u0435\u0441\u0441\u0438\u0438.",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="\u274c \u041e\u0442\u043c\u0435\u043d\u0430", callback_data="cancel_new")],
+            [InlineKeyboardButton(text="❌ \u041e\u0442\u043c\u0435\u043d\u0430", callback_data="cancel_new")],
         ]),
     )
     await callback.answer()
@@ -483,8 +483,8 @@ async def cb_close_all(callback: CallbackQuery):
         parse_mode=ParseMode.HTML,
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
             [
-                InlineKeyboardButton(text="\u2705 \u0414\u0430, \u0437\u0430\u043a\u0440\u044b\u0442\u044c", callback_data="confirm_close_all"),
-                InlineKeyboardButton(text="\u274c \u041e\u0442\u043c\u0435\u043d\u0430", callback_data="menu"),
+                InlineKeyboardButton(text="✅ \u0414\u0430, \u0437\u0430\u043a\u0440\u044b\u0442\u044c", callback_data="confirm_close_all"),
+                InlineKeyboardButton(text="❌ \u041e\u0442\u043c\u0435\u043d\u0430", callback_data="menu"),
             ],
         ]),
     )
@@ -538,7 +538,7 @@ async def handle_message(message: Message):
                 config.reload_groq_key()
                 _awaiting_setup.pop(message.chat.id, None)
                 await message.reply(
-                    "\u2705 Groq API \u043a\u043b\u044e\u0447 \u0441\u043e\u0445\u0440\u0430\u043d\u0451\u043d. \u0413\u043e\u043b\u043e\u0441\u043e\u0432\u044b\u0435 \u0432\u043a\u043b\u044e\u0447\u0435\u043d\u044b.\n"
+                    "✅ Groq API \u043a\u043b\u044e\u0447 \u0441\u043e\u0445\u0440\u0430\u043d\u0451\u043d. \u0413\u043e\u043b\u043e\u0441\u043e\u0432\u044b\u0435 \u0432\u043a\u043b\u044e\u0447\u0435\u043d\u044b.\n"
                     "\u041e\u0442\u043f\u0440\u0430\u0432\u044c \u0433\u043e\u043b\u043e\u0441\u043e\u0432\u043e\u0435 \u0434\u043b\u044f \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438.",
                     reply_markup=build_main_menu(),
                 )
@@ -548,7 +548,7 @@ async def handle_message(message: Message):
                 # Don't return — let the message be processed normally below
             else:
                 await message.reply(
-                    "\u274c \u041d\u0435\u0432\u0435\u0440\u043d\u044b\u0439 \u0444\u043e\u0440\u043c\u0430\u0442. \u041a\u043b\u044e\u0447 \u043d\u0430\u0447\u0438\u043d\u0430\u0435\u0442\u0441\u044f \u0441 <code>gsk_</code>\n"
+                    "❌ \u041d\u0435\u0432\u0435\u0440\u043d\u044b\u0439 \u0444\u043e\u0440\u043c\u0430\u0442. \u041a\u043b\u044e\u0447 \u043d\u0430\u0447\u0438\u043d\u0430\u0435\u0442\u0441\u044f \u0441 <code>gsk_</code>\n"
                     "\u041e\u0442\u043f\u0440\u0430\u0432\u044c \u043a\u043b\u044e\u0447 \u0438\u043b\u0438 \u043b\u044e\u0431\u043e\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u0434\u043b\u044f \u043e\u0442\u043c\u0435\u043d\u044b.",
                     parse_mode=ParseMode.HTML,
                 )
@@ -559,7 +559,7 @@ async def handle_message(message: Message):
 
     if text is None and (message.voice or message.audio):
         await message.reply(
-            "\ud83c\udf99 \u0413\u043e\u043b\u043e\u0441\u043e\u0432\u044b\u0435 \u0442\u0440\u0435\u0431\u0443\u044e\u0442 Groq API \u043a\u043b\u044e\u0447.\n"
+            "🎙 \u0413\u043e\u043b\u043e\u0441\u043e\u0432\u044b\u0435 \u0442\u0440\u0435\u0431\u0443\u044e\u0442 Groq API \u043a\u043b\u044e\u0447.\n"
             "\u0417\u0430\u043f\u0443\u0441\u0442\u0438 /setup (\u0431\u0435\u0441\u043f\u043b\u0430\u0442\u043d\u043e, 1 \u043c\u0438\u043d\u0443\u0442\u0430).",
         )
         return
@@ -573,7 +573,7 @@ async def handle_message(message: Message):
         if text.startswith("["):
             await message.reply(text)
             return
-        await message.reply(f"<i>\ud83c\udf99 \u0413\u043e\u043b\u043e\u0441:</i> {md_to_telegram_html(text)}", parse_mode=ParseMode.HTML)
+        await message.reply(f"<i>🎙 \u0413\u043e\u043b\u043e\u0441:</i> {md_to_telegram_html(text)}", parse_mode=ParseMode.HTML)
 
     # Append image reference for vision
     if image_path:
@@ -604,15 +604,15 @@ async def handle_message(message: Message):
 
     # 3. Show "working" indicator
     if session_id:
-        status_text = f"\ud83d\udd04 \u041f\u0440\u043e\u0434\u043e\u043b\u0436\u0430\u044e: <b>{session_name}</b>"
+        status_text = f"🔄 \u041f\u0440\u043e\u0434\u043e\u043b\u0436\u0430\u044e: <b>{session_name}</b>"
     else:
-        status_text = f"\u2795 \u041d\u043e\u0432\u0430\u044f \u0437\u0430\u0434\u0430\u0447\u0430: <i>{session_name}</i>"
+        status_text = f"➕ \u041d\u043e\u0432\u0430\u044f \u0437\u0430\u0434\u0430\u0447\u0430: <i>{session_name}</i>"
 
     status_msg = await message.reply(
         status_text,
         parse_mode=ParseMode.HTML,
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="\u23f3 \u0420\u0430\u0431\u043e\u0442\u0430\u044e...", callback_data="noop")],
+            [InlineKeyboardButton(text="⏳ \u0420\u0430\u0431\u043e\u0442\u0430\u044e...", callback_data="noop")],
         ]),
     )
 
@@ -659,11 +659,11 @@ async def handle_message(message: Message):
         # Separate control message with buttons
         await bot.send_message(
             ADMIN_CHAT_ID,
-            "\u2022\u2022\u2022",
+            "•••",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                 [
-                    InlineKeyboardButton(text="\ud83d\udccb \u0421\u0435\u0441\u0441\u0438\u0438", callback_data="sessions:0"),
-                    InlineKeyboardButton(text="\u2795 \u041d\u043e\u0432\u0430\u044f", callback_data="new_session"),
+                    InlineKeyboardButton(text="📋 \u0421\u0435\u0441\u0441\u0438\u0438", callback_data="sessions:0"),
+                    InlineKeyboardButton(text="➕ \u041d\u043e\u0432\u0430\u044f", callback_data="new_session"),
                 ],
             ]),
         )
@@ -678,18 +678,18 @@ async def handle_message(message: Message):
     if result["status"] == "queued":
         try:
             await status_msg.edit_text(
-                f"\u23f3 \u0417\u0430\u043d\u044f\u0442. \u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u0432 \u043e\u0447\u0435\u0440\u0435\u0434\u0438 ({result['position']}/{MESSAGE_QUEUE_MAX}).",
+                f"⏳ \u0417\u0430\u043d\u044f\u0442. \u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u0432 \u043e\u0447\u0435\u0440\u0435\u0434\u0438 ({result['position']}/{MESSAGE_QUEUE_MAX}).",
             )
         except TelegramBadRequest:
             pass
     elif result["status"] == "queue_full":
         try:
-            await status_msg.edit_text("\u274c \u041e\u0447\u0435\u0440\u0435\u0434\u044c \u043f\u043e\u043b\u043d\u0430. \u0414\u043e\u0436\u0434\u0438\u0441\u044c \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0438\u044f.")
+            await status_msg.edit_text("❌ \u041e\u0447\u0435\u0440\u0435\u0434\u044c \u043f\u043e\u043b\u043d\u0430. \u0414\u043e\u0436\u0434\u0438\u0441\u044c \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0438\u044f.")
         except TelegramBadRequest:
             pass
     elif result["status"] == "no_backend":
         try:
-            await status_msg.edit_text("\u274c \u0411\u044d\u043a\u0435\u043d\u0434 \u043d\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043d. \u041f\u0440\u043e\u0432\u0435\u0440\u044c CLI_BACKEND \u0432 .env")
+            await status_msg.edit_text("❌ \u0411\u044d\u043a\u0435\u043d\u0434 \u043d\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043d. \u041f\u0440\u043e\u0432\u0435\u0440\u044c CLI_BACKEND \u0432 .env")
         except TelegramBadRequest:
             pass
 
@@ -706,27 +706,27 @@ async def _send_status(chat_id: int, edit_message=None):
 
     backend = get_backend()
     backend_name = backend.display_name if backend else "?"
-    voice_status = "\u2705 Groq" if config.GROQ_API_KEY else "\u274c"
+    voice_status = "✅ Groq" if config.GROQ_API_KEY else "❌"
     schedules = _load_schedules()
     active_schedules = [s for s in schedules if s.get("enabled", True)]
 
     mem = vault_stats()
 
-    text = f"<b>\ud83d\udcca \u0421\u0442\u0430\u0442\u0443\u0441</b>\n\n"
-    text += f"\ud83d\udd27 \u0411\u044d\u043a\u0435\u043d\u0434: {backend_name}\n"
-    text += f"\u26a1 \u0410\u043a\u0442\u0438\u0432\u043d\u044b\u0445: {len(active)}\n"
-    text += f"\ud83d\udca4 \u041e\u0436\u0438\u0434\u0430\u044e\u0442: {len(idle)}\n"
-    text += f"\ud83d\udce8 \u041e\u0447\u0435\u0440\u0435\u0434\u044c: {queue_length()}\n\n"
+    text = f"<b>📊 \u0421\u0442\u0430\u0442\u0443\u0441</b>\n\n"
+    text += f"🔧 \u0411\u044d\u043a\u0435\u043d\u0434: {backend_name}\n"
+    text += f"⚡ \u0410\u043a\u0442\u0438\u0432\u043d\u044b\u0445: {len(active)}\n"
+    text += f"💤 \u041e\u0436\u0438\u0434\u0430\u044e\u0442: {len(idle)}\n"
+    text += f"📨 \u041e\u0447\u0435\u0440\u0435\u0434\u044c: {queue_length()}\n\n"
 
     if focus_session:
-        text += f"\ud83d\udc49 \u0422\u0435\u043a\u0443\u0449\u0430\u044f: <b>{focus_session['name']}</b>\n"
+        text += f"👉 \u0422\u0435\u043a\u0443\u0449\u0430\u044f: <b>{focus_session['name']}</b>\n"
     else:
-        text += f"\ud83d\udc49 \u0422\u0435\u043a\u0443\u0449\u0430\u044f: <i>\u043d\u0435\u0442</i>\n"
+        text += f"👉 \u0422\u0435\u043a\u0443\u0449\u0430\u044f: <i>\u043d\u0435\u0442</i>\n"
 
-    text += f"\ud83c\udf99 \u0413\u043e\u043b\u043e\u0441: {voice_status}\n"
-    text += f"\ud83d\udcc5 \u0417\u0430\u0434\u0430\u0447 \u043f\u043e \u0440\u0430\u0441\u043f\u0438\u0441\u0430\u043d\u0438\u044e: {len(active_schedules)}\n"
-    text += f"\ud83e\udde0 \u041f\u0430\u043c\u044f\u0442\u044c: {mem['note_count']} \u0437\u0430\u043c\u0435\u0442\u043e\u043a ({mem['total_size_kb']} KB)\n"
-    text += f"\u23f3 \u0417\u0430\u043d\u044f\u0442: {'da' if is_busy() else '\u043d\u0435\u0442'}"
+    text += f"🎙 \u0413\u043e\u043b\u043e\u0441: {voice_status}\n"
+    text += f"📅 \u0417\u0430\u0434\u0430\u0447 \u043f\u043e \u0440\u0430\u0441\u043f\u0438\u0441\u0430\u043d\u0438\u044e: {len(active_schedules)}\n"
+    text += f"🧠 \u041f\u0430\u043c\u044f\u0442\u044c: {mem['note_count']} \u0437\u0430\u043c\u0435\u0442\u043e\u043a ({mem['total_size_kb']} KB)\n"
+    text += f"⏳ \u0417\u0430\u043d\u044f\u0442: {'da' if is_busy() else '\u043d\u0435\u0442'}"
 
     if edit_message:
         await edit_message.edit_text(text, parse_mode=ParseMode.HTML, reply_markup=build_main_menu())
@@ -736,19 +736,19 @@ async def _send_status(chat_id: int, edit_message=None):
 
 async def setup_bot_commands():
     commands = [
-        BotCommand(command="menu", description="\ud83c\udfae \u041f\u0430\u043d\u0435\u043b\u044c \u0443\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u044f"),
-        BotCommand(command="sessions", description="\ud83d\udccb \u0421\u043f\u0438\u0441\u043e\u043a \u0441\u0435\u0441\u0441\u0438\u0439"),
-        BotCommand(command="new", description="\u2795 \u041d\u043e\u0432\u0430\u044f \u0441\u0435\u0441\u0441\u0438\u044f"),
-        BotCommand(command="status", description="\ud83d\udcca \u0421\u0442\u0430\u0442\u0443\u0441 \u0441\u0438\u0441\u0442\u0435\u043c\u044b"),
-        BotCommand(command="setup", description="\u2699\ufe0f \u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438"),
-        BotCommand(command="update", description="\ud83d\udd04 \u041e\u0431\u043d\u043e\u0432\u0438\u0442\u044c \u0431\u043e\u0442\u0430"),
+        BotCommand(command="menu", description="🎮 \u041f\u0430\u043d\u0435\u043b\u044c \u0443\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u044f"),
+        BotCommand(command="sessions", description="📋 \u0421\u043f\u0438\u0441\u043e\u043a \u0441\u0435\u0441\u0441\u0438\u0439"),
+        BotCommand(command="new", description="➕ \u041d\u043e\u0432\u0430\u044f \u0441\u0435\u0441\u0441\u0438\u044f"),
+        BotCommand(command="status", description="📊 \u0421\u0442\u0430\u0442\u0443\u0441 \u0441\u0438\u0441\u0442\u0435\u043c\u044b"),
+        BotCommand(command="setup", description="⚙️ \u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438"),
+        BotCommand(command="update", description="🔄 \u041e\u0431\u043d\u043e\u0432\u0438\u0442\u044c \u0431\u043e\u0442\u0430"),
     ]
     await bot.set_my_commands(commands)
 
 
 async def _scheduler_send_result(text: str, description: str):
     """Callback for scheduler — send task result to Telegram."""
-    header = f"<b>[\ud83d\udcc5 \u041f\u043e \u0440\u0430\u0441\u043f\u0438\u0441\u0430\u043d\u0438\u044e] {md_to_telegram_html(description)}</b>\n\n"
+    header = f"<b>[📅 \u041f\u043e \u0440\u0430\u0441\u043f\u0438\u0441\u0430\u043d\u0438\u044e] {md_to_telegram_html(description)}</b>\n\n"
     html = header + md_to_telegram_html(text)
     chunks = split_message(html)
 
@@ -756,7 +756,7 @@ async def _scheduler_send_result(text: str, description: str):
         try:
             await bot.send_message(ADMIN_CHAT_ID, chunk, parse_mode=ParseMode.HTML)
         except TelegramBadRequest:
-            await bot.send_message(ADMIN_CHAT_ID, f"[\ud83d\udcc5] {description}\n\n{text[:3900]}")
+            await bot.send_message(ADMIN_CHAT_ID, f"[📅] {description}\n\n{text[:3900]}")
 
 
 async def main():
