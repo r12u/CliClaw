@@ -13,13 +13,17 @@ load_dotenv(ENV_PATH)
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 ADMIN_CHAT_ID = int(os.getenv("TELEGRAM_CHAT_ID", "0"))
 
-# CLI Backend: claude | gemini | codex
+# Backend: claude | gemini | codex | openrouter
 CLI_BACKEND = os.getenv("CLI_BACKEND", "gemini")
 
-# Backend binaries
+# CLI backend binaries
 CLAUDE_BIN = os.getenv("CLAUDE_BIN", "claude")
 GEMINI_BIN = os.getenv("GEMINI_BIN", "gemini")
 CODEX_BIN = os.getenv("CODEX_BIN", "codex")
+
+# OpenRouter API
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-4-maverick:free")
 
 # Common CLI settings
 CLI_TIMEOUT = int(os.getenv("CLI_TIMEOUT", "600"))
@@ -44,12 +48,18 @@ SESSION_IDLE_TIMEOUT_HOURS = 48
 
 
 def get_backend_bin() -> str:
-    """Return the binary path for the configured backend."""
+    """Return the binary path for CLI backends. Empty for API backends."""
     return {
         "claude": CLAUDE_BIN,
         "gemini": GEMINI_BIN,
         "codex": CODEX_BIN,
-    }.get(CLI_BACKEND, "claude")
+        "openrouter": "",
+    }.get(CLI_BACKEND, "")
+
+
+def is_api_backend_config() -> bool:
+    """Check if configured backend is API-based."""
+    return CLI_BACKEND in ("openrouter",)
 
 
 def set_env_var(key: str, value: str):

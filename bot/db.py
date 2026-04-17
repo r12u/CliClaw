@@ -118,3 +118,18 @@ def save_message(role: str, text: str, session_id: str = None):
     )
     conn.commit()
     conn.close()
+
+
+def get_recent_messages(session_id: str, limit: int = 5) -> list[dict]:
+    """Return last N messages for a session, oldest first."""
+    if not session_id:
+        return []
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT role, text FROM history WHERE session_id = ? "
+        "ORDER BY id DESC LIMIT ?",
+        (session_id, limit),
+    ).fetchall()
+    conn.close()
+    # Reverse to get oldest first (chronological order)
+    return [{"role": r["role"], "content": r["text"][:1000]} for r in reversed(rows)]

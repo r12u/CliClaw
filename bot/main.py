@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import sys
+import uuid
 from datetime import datetime
 from pathlib import Path
 
@@ -581,6 +582,7 @@ async def handle_message(message: Message):
 
     # 2. Route to session
     force_new = user_focus.get(message.chat.id) == "__force_new__"
+    backend = get_backend()
 
     if force_new:
         user_focus.pop(message.chat.id, None)
@@ -599,6 +601,13 @@ async def handle_message(message: Message):
         else:
             session_id = None
             session_name = text[:50]
+
+    # For API backends: generate session_id BEFORE save_message
+    # so that history is available in _build_messages()
+    if not session_id and backend and backend.is_api_backend():
+        session_id = str(uuid.uuid4())
+        create_session(session_id, session_name)
+        user_focus[message.chat.id] = session_id
 
     save_message("user", text, session_id)
 
@@ -766,13 +775,22 @@ async def main():
     init_fts()
     reindex_vault()
 
-    # Init CLI backend
-    backend = create_backend(
-        name=config.CLI_BACKEND,
-        bin_path=config.get_backend_bin(),
-        work_dir=str(config.WORK_DIR),
-        timeout=config.CLI_TIMEOUT,
-    )
+    # Init backend
+    if config.is_api_backend_config():
+        backend = create_backend(
+            name=config.CLI_BACKEND,
+            api_key=config.OPENROUTER_API_KEY,
+            work_dir=str(config.WORK_DIR),
+            timeout=config.CLI_TIMEOUT,
+            model=config.OPENROUTER_MODEL,
+        )
+    else:
+        backend = create_backend(
+            name=config.CLI_BACKEND,
+            bin_path=config.get_backend_bin(),
+            work_dir=str(config.WORK_DIR),
+            timeout=config.CLI_TIMEOUT,
+        )
     init_runner(backend)
 
     await setup_bot_commands()

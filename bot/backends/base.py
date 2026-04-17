@@ -1,8 +1,9 @@
-"""Base class for CLI backends. Strategy pattern — each backend owns its logic."""
+"""Backend base classes. Two families: CLI (subprocess) and API (HTTP)."""
 
 import asyncio
 import logging
-from dataclasses import dataclass, field
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import Optional
 
 logger = logging.getLogger("backend")
@@ -10,7 +11,7 @@ logger = logging.getLogger("backend")
 
 @dataclass
 class CLIResult:
-    """Unified result from any CLI backend."""
+    """Unified result from any backend (CLI or API)."""
     text: str
     session_id: Optional[str] = None
     num_turns: int = 0
@@ -18,11 +19,28 @@ class CLIResult:
     raw: Optional[dict] = None
 
 
-class CLIBackend:
-    """Base class. Each backend fully owns its command building, parsing, auth."""
+class Backend(ABC):
+    """Abstract base for ALL backends."""
 
     name: str = "base"
     display_name: str = "Base"
+
+    @abstractmethod
+    async def execute(
+        self,
+        prompt: str,
+        session_id: Optional[str] = None,
+    ) -> Optional[CLIResult]:
+        ...
+
+    def is_api_backend(self) -> bool:
+        """True for API backends that manage their own context/history."""
+        return False
+
+
+class CLIBackend(Backend):
+    """Base for CLI backends — runs AI tool as subprocess."""
+
     identity_filename: str = "IDENTITY.md"
 
     def __init__(self, bin_path: str, work_dir: str, timeout: int = 600):
@@ -83,13 +101,20 @@ class CLIBackend:
         return result
 
     def build_command(self, prompt: str, session_id: Optional[str] = None) -> list[str]:
-        """Override in subclass."""
         raise NotImplementedError
 
     def parse_output(self, raw: str) -> Optional[CLIResult]:
-        """Override in subclass."""
         raise NotImplementedError
 
-    def get_auth_instructions(self) -> str:
-        """Human-readable auth setup instructions for install.sh."""
-        return "No auth required."
+
+class APIBackend(Backend):
+    """Base for API backends — HTTP calls, manages own context."""
+
+    def __init__(self, api_key: str, work_dir: str, timeout: int = 120, model: str = ""):
+        self.api_key = api_key
+        self.work_dir = work_dir
+        self.timeout = timeout
+        self.model = model
+
+    def is_api_backend(self) -> bool:
+        return True

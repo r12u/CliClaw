@@ -5,17 +5,17 @@ import logging
 from pathlib import Path
 from typing import Optional, Callable
 
-from backends.base import CLIBackend, CLIResult
+from backends.base import Backend, CLIResult
 
 logger = logging.getLogger("runner")
 
 # In-memory state
 _is_busy = False
 _message_queue: list[dict] = []
-_backend: Optional[CLIBackend] = None
+_backend: Optional[Backend] = None
 
 
-def init_runner(backend: CLIBackend):
+def init_runner(backend: Backend):
     """Set the active backend. Called once at startup."""
     global _backend
     _backend = backend
@@ -30,7 +30,7 @@ def queue_length() -> int:
     return len(_message_queue)
 
 
-def get_backend() -> Optional[CLIBackend]:
+def get_backend() -> Optional[Backend]:
     return _backend
 
 
@@ -73,8 +73,11 @@ async def _process_prompt(
     global _is_busy
 
     try:
-        # Inject memory context
-        augmented_prompt = await _inject_memory(prompt)
+        # Inject memory context (CLI only — API backends handle it internally)
+        if _backend.is_api_backend():
+            augmented_prompt = prompt
+        else:
+            augmented_prompt = await _inject_memory(prompt)
 
         result = await _backend.execute(augmented_prompt, session_id)
 
@@ -93,7 +96,7 @@ async def _process_prompt(
             queued = _message_queue.pop(0)
             sid = new_session_id or queued.get("session_id")
 
-            q_augmented = await _inject_memory(queued["text"])
+            q_augmented = queued["text"] if _backend.is_api_backend() else await _inject_memory(queued["text"])
             qr = await _backend.execute(q_augmented, sid)
             q_text = qr.text if qr else ""
             q_sid = qr.session_id if qr else sid

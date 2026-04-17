@@ -11,37 +11,42 @@ from memory.vault import read_note, append_note, save_note, list_notes
 logger = logging.getLogger("memory.hooks")
 
 
-async def inject_context(prompt: str) -> str:
-    """Search memory vault and prepend relevant context to prompt."""
-    if not config.MEMORY_ENABLED:
-        return prompt
+def get_memory_context(query: str) -> str | None:
+    """Search memory vault, return formatted context string or None.
 
-    # Extract keywords from prompt (simple: first 200 chars, stripped of punctuation)
-    query_text = re.sub(r'[^\w\s]', ' ', prompt[:200]).strip()
+    Used by both CLI (via inject_context) and API (via backend._build_messages).
+    """
+    if not config.MEMORY_ENABLED:
+        return None
+
+    query_text = re.sub(r'[^\w\s]', ' ', query[:200]).strip()
     if not query_text:
-        return prompt
+        return None
 
     results = search(query_text, limit=config.MEMORY_INJECT_LIMIT)
     if not results:
-        return prompt
+        return None
 
-    # Read content of top results
     context_parts = []
     for r in results:
         content = read_note(r.path)
         if content:
-            # Take first 500 chars of each note
             snippet = content[:500].strip()
             context_parts.append(f"[{r.path}]: {snippet}")
 
     if not context_parts:
+        return None
+
+    logger.info(f"Found {len(context_parts)} memory notes for context")
+    return "\n".join(context_parts)
+
+
+async def inject_context(prompt: str) -> str:
+    """For CLI backends: prepend memory context to prompt string."""
+    context = get_memory_context(prompt)
+    if not context:
         return prompt
-
-    memory_block = "\n".join(context_parts)
-    augmented = f"[Memory context — relevant notes from previous sessions:]\n{memory_block}\n\n{prompt}"
-
-    logger.info(f"Injected {len(context_parts)} memory notes into prompt")
-    return augmented
+    return f"[Memory context:]\n{context}\n\n{prompt}"
 
 
 async def extract_and_save(user_prompt: str, assistant_response: str):

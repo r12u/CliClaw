@@ -107,6 +107,9 @@ _install_backend_cli() {
             fi
             info "Codex CLI ready"
             ;;
+        openrouter)
+            info "OpenRouter: API backend, no CLI to install"
+            ;;
     esac
 }
 
@@ -140,14 +143,16 @@ _choose_backend() {
         echo "    1) Claude Code  (Anthropic — login by link, Max subscription)"
         echo "    2) Gemini CLI   (Google — FREE, just API key, no card)"
         echo "    3) Codex CLI    (OpenAI — login from phone, ChatGPT subscription)"
+        echo "    4) OpenRouter   (1000+ models, FREE models available)"
         echo ""
         while true; do
-            read -p "  Your choice [1-3]: " backend_choice
+            read -p "  Your choice [1-4]: " backend_choice
             case $backend_choice in
                 1) CLI_BACKEND="claude"; break ;;
                 2) CLI_BACKEND="gemini"; break ;;
                 3) CLI_BACKEND="codex"; break ;;
-                *) warn "Enter 1, 2, or 3" ;;
+                4) CLI_BACKEND="openrouter"; break ;;
+                *) warn "Enter 1, 2, 3, or 4" ;;
             esac
         done
     fi
@@ -166,6 +171,8 @@ _configure_tokens() {
         _SAVED_GEMINI_KEY=$(grep "^GEMINI_API_KEY=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
         _SAVED_OPENAI_KEY=$(grep "^OPENAI_API_KEY=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
         _SAVED_ANTHROPIC_KEY=$(grep "^ANTHROPIC_API_KEY=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
+        _SAVED_OPENROUTER_KEY=$(grep "^OPENROUTER_API_KEY=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
+        _SAVED_OPENROUTER_MODEL=$(grep "^OPENROUTER_MODEL=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
     fi
 
     echo ""
@@ -257,6 +264,46 @@ _configure_tokens() {
         claude)
             # OAuth — no key needed, auth happens separately
             ;;
+        openrouter)
+            echo "  OpenRouter API key (FREE models available)"
+            echo "  Get it at: https://openrouter.ai/settings/keys"
+            echo ""
+            OPENROUTER_KEY="${_SAVED_OPENROUTER_KEY:-}"
+            if [[ -n "$OPENROUTER_KEY" ]]; then
+                echo "  Current: ...${OPENROUTER_KEY: -6}"
+                read -p "  Change? (Enter to keep / paste new): " new_or
+                [[ -n "$new_or" ]] && OPENROUTER_KEY="$new_or"
+            else
+                read -p "  OpenRouter API key: " OPENROUTER_KEY
+            fi
+
+            # Model selection
+            OPENROUTER_MODEL="${_SAVED_OPENROUTER_MODEL:-}"
+            echo ""
+            echo "  Choose model (free models end with :free):"
+            echo "    1) meta-llama/llama-4-maverick:free    (Llama 4)"
+            echo "    2) google/gemini-2.5-flash-preview:free (Gemini Flash)"
+            echo "    3) deepseek/deepseek-chat-v3-0324:free  (DeepSeek)"
+            echo "    4) qwen/qwen3-235b-a22b:free           (Qwen 3)"
+            echo "    5) Keep current / Enter custom model ID"
+            echo ""
+            if [[ -n "$OPENROUTER_MODEL" ]]; then
+                echo "  Current: $OPENROUTER_MODEL"
+            fi
+            read -p "  Choice [1-5 or model ID]: " model_choice
+            case $model_choice in
+                1) OPENROUTER_MODEL="meta-llama/llama-4-maverick:free" ;;
+                2) OPENROUTER_MODEL="google/gemini-2.5-flash-preview:free" ;;
+                3) OPENROUTER_MODEL="deepseek/deepseek-chat-v3-0324:free" ;;
+                4) OPENROUTER_MODEL="qwen/qwen3-235b-a22b:free" ;;
+                5|"") ;; # keep current
+                *) OPENROUTER_MODEL="$model_choice" ;; # custom model ID
+            esac
+            OPENROUTER_MODEL="${OPENROUTER_MODEL:-meta-llama/llama-4-maverick:free}"
+
+            BACKEND_SPECIFIC_VARS="OPENROUTER_API_KEY=$OPENROUTER_KEY
+OPENROUTER_MODEL=$OPENROUTER_MODEL"
+            ;;
     esac
 }
 
@@ -265,6 +312,8 @@ _write_env() {
     local gemini_key="${GEMINI_KEY:-${_SAVED_GEMINI_KEY:-}}"
     local openai_key="${OPENAI_KEY:-${_SAVED_OPENAI_KEY:-}}"
     local anthropic_key="${_SAVED_ANTHROPIC_KEY:-}"
+    local openrouter_key="${OPENROUTER_KEY:-${_SAVED_OPENROUTER_KEY:-}}"
+    local openrouter_model="${OPENROUTER_MODEL:-${_SAVED_OPENROUTER_MODEL:-meta-llama/llama-4-maverick:free}}"
 
     cat > "$INSTALL_DIR/.env" << ENVEOF
 CLI_BACKEND=$CLI_BACKEND
@@ -274,6 +323,8 @@ GROQ_API_KEY=$GROQ_KEY
 GEMINI_API_KEY=$gemini_key
 OPENAI_API_KEY=$openai_key
 ANTHROPIC_API_KEY=$anthropic_key
+OPENROUTER_API_KEY=$openrouter_key
+OPENROUTER_MODEL=$openrouter_model
 ENVEOF
     chmod 600 "$INSTALL_DIR/.env"
     chown cliclaw:cliclaw "$INSTALL_DIR/.env"
@@ -349,6 +400,14 @@ _run_auth() {
                 info "Gemini: API key configured"
             else
                 warn "Add GEMINI_API_KEY to $INSTALL_DIR/.env"
+            fi
+            ;;
+
+        openrouter)
+            if [[ -n "$OPENROUTER_KEY" ]]; then
+                info "OpenRouter: API key configured, model: ${OPENROUTER_MODEL:-default}"
+            else
+                warn "Add OPENROUTER_API_KEY to $INSTALL_DIR/.env"
             fi
             ;;
     esac
