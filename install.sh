@@ -157,11 +157,15 @@ _choose_backend() {
 _configure_tokens() {
     BACKEND_SPECIFIC_VARS=""
 
-    # Telegram tokens (re-use existing if available)
+    # Re-use ALL existing keys from .env
     if [[ -f "$INSTALL_DIR/.env" ]]; then
         BOT_TOKEN=$(grep "^TELEGRAM_BOT_TOKEN=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
         CHAT_ID=$(grep "^TELEGRAM_CHAT_ID=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
         GROQ_KEY=$(grep "^GROQ_API_KEY=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
+        # Preserve all backend keys (survive backend switches)
+        _SAVED_GEMINI_KEY=$(grep "^GEMINI_API_KEY=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
+        _SAVED_OPENAI_KEY=$(grep "^OPENAI_API_KEY=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
+        _SAVED_ANTHROPIC_KEY=$(grep "^ANTHROPIC_API_KEY=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
     fi
 
     echo ""
@@ -226,9 +230,8 @@ _configure_tokens() {
         gemini)
             echo "  Gemini API key (FREE, no credit card)"
             echo "  Get it at: https://aistudio.google.com/apikey"
-            echo "  (Create key in NEW project if previous was blocked)"
             echo ""
-            GEMINI_KEY=$(grep "^GEMINI_API_KEY=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
+            GEMINI_KEY="${_SAVED_GEMINI_KEY:-}"
             if [[ -n "$GEMINI_KEY" ]]; then
                 echo "  Current: ...${GEMINI_KEY: -6}"
                 read -p "  Change? (Enter to keep / paste new): " new_gemini
@@ -258,12 +261,19 @@ _configure_tokens() {
 }
 
 _write_env() {
+    # Determine all keys (current + saved from previous backends)
+    local gemini_key="${GEMINI_KEY:-${_SAVED_GEMINI_KEY:-}}"
+    local openai_key="${OPENAI_KEY:-${_SAVED_OPENAI_KEY:-}}"
+    local anthropic_key="${_SAVED_ANTHROPIC_KEY:-}"
+
     cat > "$INSTALL_DIR/.env" << ENVEOF
 CLI_BACKEND=$CLI_BACKEND
 TELEGRAM_BOT_TOKEN=$BOT_TOKEN
 TELEGRAM_CHAT_ID=$CHAT_ID
 GROQ_API_KEY=$GROQ_KEY
-$BACKEND_SPECIFIC_VARS
+GEMINI_API_KEY=$gemini_key
+OPENAI_API_KEY=$openai_key
+ANTHROPIC_API_KEY=$anthropic_key
 ENVEOF
     chmod 600 "$INSTALL_DIR/.env"
     chown cliclaw:cliclaw "$INSTALL_DIR/.env"
