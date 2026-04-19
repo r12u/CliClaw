@@ -82,7 +82,9 @@ async def extract_and_save(user_prompt: str, assistant_response: str):
             fact = match.strip()
             if len(fact) > 10:
                 append_note("facts.md", fact)
-                index_note("facts.md", fact)
+                # Re-index entire facts.md (not just the new fact)
+                full_content = read_note("facts.md") or fact
+                index_note("facts.md", full_content)
                 logger.info(f"Extracted explicit fact: {fact[:60]}...")
 
 

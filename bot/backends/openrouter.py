@@ -109,7 +109,11 @@ class OpenRouterBackend(APIBackend):
 
         memory = self._get_memory_context(prompt)
         if memory:
-            system_parts.append(f"[Relevant notes from memory:]\n{memory}")
+            system_parts.append(
+                "IMPORTANT — The following facts were saved by the user in previous conversations. "
+                "Use them to answer questions. These are VERIFIED facts, not guesses:\n\n"
+                f"{memory}"
+            )
 
         if system_parts:
             messages.append({"role": "system", "content": "\n\n".join(system_parts)})
