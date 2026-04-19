@@ -14,25 +14,34 @@ logger = logging.getLogger("memory.hooks")
 def get_memory_context(query: str) -> str | None:
     """Search memory vault, return formatted context string or None.
 
-    Used by both CLI (via inject_context) and API (via backend._build_messages).
+    Always includes facts.md (core knowledge).
+    Uses FTS5 with OR for session log search.
     """
     if not config.MEMORY_ENABLED:
         return None
 
-    query_text = re.sub(r'[^\w\s]', ' ', query[:200]).strip()
-    if not query_text:
-        return None
-
-    results = search(query_text, limit=config.MEMORY_INJECT_LIMIT)
-    if not results:
-        return None
-
     context_parts = []
-    for r in results:
-        content = read_note(r.path)
-        if content:
-            snippet = content[:500].strip()
-            context_parts.append(f"[{r.path}]: {snippet}")
+
+    # 1. Always include facts.md — it's small and contains core user knowledge
+    facts = read_note("facts.md")
+    if facts and facts.strip():
+        context_parts.append(f"[User facts]:\n{facts[:2000].strip()}")
+
+    # 2. Search session logs with OR (not AND) for broader matching
+    query_text = re.sub(r'[^\w\s]', ' ', query[:200]).strip()
+    if query_text:
+        # Convert "какой мой любимый цвет" → "какой OR мой OR любимый OR цвет"
+        words = [w for w in query_text.split() if len(w) > 2]
+        if words:
+            or_query = " OR ".join(words)
+            results = search(or_query, limit=config.MEMORY_INJECT_LIMIT)
+            for r in results:
+                if r.path == "facts.md":
+                    continue  # already included above
+                content = read_note(r.path)
+                if content:
+                    snippet = content[:500].strip()
+                    context_parts.append(f"[{r.path}]: {snippet}")
 
     if not context_parts:
         return None
