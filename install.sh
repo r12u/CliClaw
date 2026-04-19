@@ -116,6 +116,7 @@ _install_backend_cli() {
 _do_reconfigure() {
     _choose_backend
     _install_backend_cli
+    info "Configuring tokens..."
     _configure_tokens
     _write_env
     _copy_identity
@@ -164,15 +165,15 @@ _configure_tokens() {
 
     # Re-use ALL existing keys from .env
     if [[ -f "$INSTALL_DIR/.env" ]]; then
-        BOT_TOKEN=$(grep "^TELEGRAM_BOT_TOKEN=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
-        CHAT_ID=$(grep "^TELEGRAM_CHAT_ID=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
-        GROQ_KEY=$(grep "^GROQ_API_KEY=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
+        BOT_TOKEN=$(grep "^TELEGRAM_BOT_TOKEN=" "$INSTALL_DIR/.env" | cut -d= -f2- || true)
+        CHAT_ID=$(grep "^TELEGRAM_CHAT_ID=" "$INSTALL_DIR/.env" | cut -d= -f2- || true)
+        GROQ_KEY=$(grep "^GROQ_API_KEY=" "$INSTALL_DIR/.env" | cut -d= -f2- || true)
         # Preserve all backend keys (survive backend switches)
-        _SAVED_GEMINI_KEY=$(grep "^GEMINI_API_KEY=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
-        _SAVED_OPENAI_KEY=$(grep "^OPENAI_API_KEY=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
-        _SAVED_ANTHROPIC_KEY=$(grep "^ANTHROPIC_API_KEY=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
-        _SAVED_OPENROUTER_KEY=$(grep "^OPENROUTER_API_KEY=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
-        _SAVED_OPENROUTER_MODEL=$(grep "^OPENROUTER_MODEL=" "$INSTALL_DIR/.env" 2>/dev/null | cut -d= -f2-)
+        _SAVED_GEMINI_KEY=$(grep "^GEMINI_API_KEY=" "$INSTALL_DIR/.env" | cut -d= -f2- || true)
+        _SAVED_OPENAI_KEY=$(grep "^OPENAI_API_KEY=" "$INSTALL_DIR/.env" | cut -d= -f2- || true)
+        _SAVED_ANTHROPIC_KEY=$(grep "^ANTHROPIC_API_KEY=" "$INSTALL_DIR/.env" | cut -d= -f2- || true)
+        _SAVED_OPENROUTER_KEY=$(grep "^OPENROUTER_API_KEY=" "$INSTALL_DIR/.env" | cut -d= -f2- || true)
+        _SAVED_OPENROUTER_MODEL=$(grep "^OPENROUTER_MODEL=" "$INSTALL_DIR/.env" | cut -d= -f2- || true)
     fi
 
     echo ""
